@@ -1,69 +1,224 @@
-import Image from "next/image";
+"use client"
+import { useState } from 'react';
+import DesktopGrid from '../components/desktop';
+import Taskbar from '../components/taskbar';
+import WindowFrame from '../components/WindowFrame';
+import { type AppConfig } from './../types/window.types';
+import ClockApp from "../components/clockApp"
+import WallpaperApp from "../components/wallpaper"
+import NotesApp from "../components/notesApp"
+import AskMeApp from "../components/askMeApp"
+import Image from 'next/image';
+import ContactApp from '@/components/contactApp';
+
+// App Configurations
+const INITIAL_APPS: AppConfig[] = [
+  {
+    id: 'notepad',
+    title: 'Notepad',
+    icon: <Image alt="notepad" width={56} height={56} src="/icon/notes.png" draggable={false} priority />,
+    topicon: <span className="text-xl">📝</span>,
+    status: 'closed',
+    isFocused: false,
+    isMaximized: false,
+    zIndex: 10,
+  },
+  {
+    id: 'clock',
+    title: 'Clock',
+    icon: <Image alt="clock" width={56} height={56} src="/icon/clock.png" draggable={false} priority />,
+    topicon: <span className="text-xl">⏰</span>,
+    status: 'closed',
+    isFocused: false,
+    isMaximized: false,
+    zIndex: 10,
+  },
+  {
+    id: 'contact',
+    title: 'Contact Me',
+    icon: <Image alt="contact" width={56} height={56} src="/icon/contactMe.png" draggable={false} priority />,
+    topicon: <span className="text-xl">📬</span>,
+    status: 'closed',
+    isFocused: false,
+    isMaximized: false,
+    zIndex: 10,
+  },
+  {
+    id: 'wallpaper',
+    title: 'Wallpaper',
+    icon: <Image alt="wallpaper" width={56} height={56} src="/icon/wallpaper.png" draggable={false} priority />,
+    topicon: <span className="text-xl">💻</span>,
+    status: 'closed',
+    isFocused: false,
+    isMaximized: false,
+    zIndex: 10,
+  },
+  {
+    id: 'askMe',
+    title: 'Ask Me',
+    icon: <AskMeIcon />,
+    topicon: <AskMeIcon />,
+    status: 'closed',
+    isFocused: false,
+    isMaximized: false,
+    zIndex: 10,
+  },
+];
+
+interface AppRenderProps {
+  app: {
+    id: string;
+    status: "closed" | "open" | "minimized";
+    isMaximized: boolean;
+  };
+  currentWallpaper: string;
+  setCurrentWallpaper: (wallpaper: string) => void;
+}
+
+export const APP_COMPONENTS: Record<
+  string,
+  (props: AppRenderProps) => React.ReactNode
+> = {
+  askMe: ({ app }) => <AskMeApp isMaximized={app.isMaximized} />,
+  notepad: ({ app }) => <NotesApp appStatus={app.status} />,
+  clock: ({ app }) => <ClockApp isMaximized={app.isMaximized} />,
+  contact: () => <ContactApp />,
+  wallpaper: ({ currentWallpaper, setCurrentWallpaper }) => (
+    <WallpaperApp
+      currentWallpaper={currentWallpaper}
+      onSelectWallpaper={setCurrentWallpaper}
+    />
+  ),
+};
+
 
 export default function Home() {
+  const [apps, setApps] = useState<AppConfig[]>(INITIAL_APPS);
+  const [currentWallpaper, setCurrentWallpaper] = useState<string>('/background/image4.webp');
+
+  const isAnyAppMaximized = apps.some((w) => w.status === 'open' && w.isMaximized);
+
+  // Focus Window & Bring to Front
+  const handleFocusWindow = (id: string) => {
+    setApps((prevApps) => {
+      // Find current highest zIndex across all windows
+      const maxZ = Math.max(...prevApps.map((app) => app.zIndex || 0), 20);
+      const nextZ = maxZ + 1;
+
+      return prevApps.map((app) => ({
+        ...app,
+        isFocused: app.id === id,
+        zIndex: app.id === id ? nextZ : app.zIndex,
+      }));
+    });
+  };
+
+  // Taskbar Click Logic
+  const handleTaskbarAppClick = (id: string) => {
+    const targetApp = apps.find((a) => a.id === id);
+
+    if (!targetApp) return;
+
+
+    // Case 1: App is closed or minimized -> Open/Restore and focus
+    if (targetApp.status === 'closed' || targetApp.status === 'minimized') {
+      setApps((prevApps) =>
+        prevApps.map((app) =>
+          app.id === id ? { ...app, status: 'open' } : app
+        )
+      );
+      handleFocusWindow(id);
+      return;
+    }
+
+    // Case 2: App is open and focused -> Minimize to background
+    if (targetApp.status === 'open' && targetApp.isFocused) {
+      setApps((prevApps) =>
+        prevApps.map((app) =>
+          app.id === id ? { ...app, status: 'minimized', isFocused: false } : app
+        )
+      );
+      return;
+    }
+
+    // Case 3: App is open but not focused -> Bring to front
+    if (targetApp.status === 'open' && !targetApp.isFocused) {
+      handleFocusWindow(id);
+    }
+  };
+
+  // Traffic Light Actions
+  const handleCloseWindow = (id: string) => {
+    setApps((prevApps) =>
+      prevApps.map((app) =>
+        app.id === id
+          ? { ...app, status: 'closed', isFocused: false, isMaximized: false }
+          : app
+      )
+    );
+  };
+
+  const handleMinimizeWindow = (id: string) => {
+    setApps((prevApps) =>
+      prevApps.map((app) =>
+        app.id === id ? { ...app, status: 'minimized', isFocused: false } : app
+      )
+    );
+  };
+
+  const handleToggleMaximizeWindow = (id: string) => {
+    setApps((prevApps) =>
+      prevApps.map((app) =>
+        app.id === id ? { ...app, isMaximized: !app.isMaximized } : app
+      )
+    );
+    handleFocusWindow(id);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div 
+      className="relative h-screen w-full bg-cover bg-center bg-no-repeat overflow-hidden select-none"
+      style={{ backgroundImage: `url(${currentWallpaper})`}}
+      >
+      {/* Interactive Desktop Grid */}
+      <DesktopGrid />
+
+      {/* Render Active Window Frames */}
+      {apps.map((app) => (
+        <WindowFrame
+          key={app.id}
+          id={app.id}
+          title={app.title}
+          topicon={app.topicon}
+          isOpen={app.status === 'open'}
+          isMinimized={app.status === 'minimized'}
+          isMaximized={app.isMaximized}
+          isFocused={app.isFocused}
+          zIndex={app.zIndex}
+          onClose={handleCloseWindow}
+          onMinimize={handleMinimizeWindow}
+          onToggleMaximize={handleToggleMaximizeWindow}
+          onFocus={handleFocusWindow}
+        >
+          {(() => {
+            const RenderApp = APP_COMPONENTS[app.id];
+            return RenderApp ? (
+              RenderApp({ app, currentWallpaper, setCurrentWallpaper })
+            ) : null;
+          })()}
+        </WindowFrame>
+      ))}
+
+      {/* Floating Bottom Glass Taskbar */}
+      <Taskbar apps={apps} onAppClick={handleTaskbarAppClick} isAnyAppMaximized={isAnyAppMaximized} />
     </div>
   );
+}
+
+function AskMeIcon() {
+
+  return <span className="inline-flex items-start leading-none select-none text-blue-600">
+            <span className="text-base">✦</span>
+            <span className="text-[10px] -ml-px -mt-px">✦</span>
+          </span>
 }
