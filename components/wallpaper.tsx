@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 
-const WALLPAPERS = [
-  { id: '1', full: '/background/image1.jpg', thumb: '/thumbnails/image1-50kb.jpg' },
-  { id: '2', full: '/background/image2.png', thumb: '/thumbnails/image2-50kb.jpeg' },
-  { id: '3', full: '/background/image3.jpg', thumb: '/thumbnails/image3-50kb.jpg' },
+export const WALLPAPERS = [
+  { id: '1', full: '/background/image1.webp', thumb: '/thumbnails/image1-50kb.jpg' },
+  { id: '2', full: '/background/image2.webp', thumb: '/thumbnails/image2-50kb.jpeg' },
+  { id: '3', full: '/background/image3.webp', thumb: '/thumbnails/image3-50kb.jpg' },
   { id: '4', full: '/background/image4.webp', thumb: '/thumbnails/image4-50kb.jpg' },
-  { id: '5', full: '/background/image5.jpg', thumb: '/thumbnails/image5-50kb.jpg' },
-  { id: '6', full: '/background/image6.png', thumb: '/thumbnails/image6-50kb.jpeg' },
-  { id: '7', full: '/background/image7.jpg', thumb: '/thumbnails/image7-50kb.jpg' },
+  { id: '5', full: '/background/image5.webp', thumb: '/thumbnails/image5-50kb.jpg' },
+  { id: '6', full: '/background/image6.webp', thumb: '/thumbnails/image6-50kb.jpeg' },
+  { id: '7', full: '/background/image7.webp', thumb: '/thumbnails/image7-50kb.jpg' },
 ];
 
 interface WallpaperAppProps {

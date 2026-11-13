@@ -19,6 +19,9 @@
 
 # production
 /build
+/scripts
+/originals
+
 
 # misc
 .DS_Store

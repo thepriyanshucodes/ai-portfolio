@@ -5,11 +5,12 @@ import Taskbar from '../components/taskbar';
 import WindowFrame from '../components/WindowFrame';
 import { type AppConfig } from './../types/window.types';
 import ClockApp from "../components/clockApp"
-import WallpaperApp from "../components/wallpaper"
+import WallpaperApp, { WALLPAPERS } from "../components/wallpaper"
 import NotesApp from "../components/notesApp"
 import AskMeApp from "../components/askMeApp"
 import Image from 'next/image';
 import ContactApp from '@/components/contactApp';
+import Background from '@/components/Background';
 
 // App Configurations
 const INITIAL_APPS: AppConfig[] = [
@@ -95,6 +96,8 @@ export const APP_COMPONENTS: Record<
 export default function Home() {
   const [apps, setApps] = useState<AppConfig[]>(INITIAL_APPS);
   const [currentWallpaper, setCurrentWallpaper] = useState<string>('/background/image4.webp');
+  const currentThumb =
+  WALLPAPERS.find((w) => w.full === currentWallpaper)?.thumb ?? WALLPAPERS[0].thumb;
 
   const isAnyAppMaximized = apps.some((w) => w.status === 'open' && w.isMaximized);
 
@@ -176,10 +179,9 @@ export default function Home() {
   };
 
   return (
-    <div 
-      className="relative h-screen w-full bg-cover bg-center bg-no-repeat overflow-hidden select-none"
-      style={{ backgroundImage: `url(${currentWallpaper})`}}
-      >
+    <div className="relative h-dvh w-full overflow-hidden select-none">
+      <Background key={currentWallpaper} full={currentWallpaper} thumb={currentThumb} />
+
       {/* Interactive Desktop Grid */}
       <DesktopGrid />
 
